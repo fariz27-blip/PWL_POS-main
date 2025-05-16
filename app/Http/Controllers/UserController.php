@@ -10,20 +10,59 @@ class UserController extends Controller
 {
     public function index()
     {
-        $data = [
-            'nama' => 'pelanggan pertama',
-        ];
-
-        // Lakukan update berdasarkan username
-        $update = UserModel::where('username', 'customer-1')->update($data);
-
-        // Ambil semua data user setelah update
         $user = UserModel::all();
+        return view('user', ['data' => $user]);
+    }
 
-        // Kirim data dan status update ke view
-        return view('user', [
-            'data' => $user,
-            'updateStatus' => $update ? 'Data berhasil diupdate.' : 'Data tidak ditemukan atau gagal update.',
+    public function tambah()
+    {
+        return view('user_tambah');
+    }
+
+    public function tambah_simpan(Request $request)
+    {
+        UserModel::create([
+            'username' => $request->username,
+            'nama' => $request->nama,
+            'password' => Hash::make($request->password),
+            'level_id' => $request->level_id,
         ]);
+        return redirect('/user');
+    }
+
+    public function ubah($id)
+    {
+        $user = UserModel::find($id);
+        return view('user_ubah', ['data' => $user]);
+    }
+
+    public function ubah_simpan(Request $request, $id)
+    {
+        $user = UserModel::find($id);
+        $user->username = $request->username;
+        $user->nama = $request->nama;
+        if ($request->password) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->level_id = $request->level_id;
+        $user->save();
+
+        return redirect('/user');
+    }
+
+    public function hapus($id)
+    {
+        $user = UserModel::find($id);
+        if ($user) {
+            $user->delete();
+        }
+
+        return redirect('/user');
+    }
+
+    public function indek()
+    {
+        $user = UserModel::with('level')->get();
+        return view('user', ['data' => $user]);
     }
 }
